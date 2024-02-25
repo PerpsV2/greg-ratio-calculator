@@ -38,7 +38,7 @@ namespace GregRatioCalculator
         public List<Recipe> Traverse(Recipe rootRecipe)
         {
             List<Recipe> beenTo = new List<Recipe>();
-            Console.WriteLine($"{rootRecipe.name} {rootRecipe.voltageTier} {rootRecipe.time}s");
+            Console.WriteLine($"{rootRecipe.name} {rootRecipe.machineVoltage} {rootRecipe.recipeVoltage} {rootRecipe.time}s");
             foreach (var recipe in rootRecipe.inputRecipes) {
                 beenTo.Concat(Traverse(recipe));
             }

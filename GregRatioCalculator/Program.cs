@@ -6,16 +6,16 @@ Recipe? current = null;
 
 void PrintInstructions()
 {
-    Console.WriteLine("Add a new recipe to current   - add <name> <voltage tier> <time (seconds)>");
+    Console.WriteLine("Add a new recipe to current   - add <name> <machine voltage> <recipe voltage> <time (seconds)>");
     Console.WriteLine("Add existing recipe to curr.  - add <name>");
-    Console.WriteLine("Edit an existing recipe       - edit <name> <voltage tier> <time (seconds)>");
+    Console.WriteLine("Edit an existing recipe       - edit <name> <machine voltage> <recipe voltage> <time (seconds)>");
     Console.WriteLine("Remove a recipe by name       - remove <name>");
     Console.WriteLine("Select a recipe by name       - select <name>");
     Console.WriteLine("Select global scope           - select");
     Console.WriteLine("List all recipes from current - list");
     Console.WriteLine("List all recipes in graph     - listall");
-    Console.WriteLine("Add input to current recipe   - i <name> <amount>");
-    Console.WriteLine("Add output to current recipe  - o <name> <amount>");
+    Console.WriteLine("Add input to current recipe   - i <amount> <name> ");
+    Console.WriteLine("Add output to current recipe  - o <amount> <name> ");
     Console.WriteLine("Remove input from current     - ri <name>");
     Console.WriteLine("Remove output from current    - ro <name>");
     Console.WriteLine("Print recipe i/o              - io");
@@ -25,7 +25,7 @@ void PrintInstructions()
 
 void AddRecipe(string[] inputData) 
 {
-    if (inputData.Length != 4 && inputData.Length != 2) return; // make sure the command has the correct number of arguments
+    if (inputData.Length != 5 && inputData.Length != 2) return; // make sure the command has the correct number of arguments
 
     string name = inputData[1];
 
@@ -36,36 +36,51 @@ void AddRecipe(string[] inputData)
             recipeGraph.BindInputRecipe(current, recipeGraph.GetRecipe(name) ?? current);
     }
     // add a recipe to global space
-    else if (inputData.Length == 4)
+    else if (inputData.Length == 5)
     {
         // make sure voltage is valid
-        if (!VoltageTier.TryParse(inputData[2].ToUpper(), out VoltageTier voltageTier)) return;
+        if (!VoltageTier.TryParse(inputData[2].ToUpper(), out VoltageTier machineVoltage)) return;
+        if (!VoltageTier.TryParse(inputData[3].ToUpper(), out VoltageTier recipeVoltage)) return;
+
+        if (machineVoltage < recipeVoltage)
+        {
+            Console.WriteLine("Recipe has insufficient voltage");
+            return;
+        }
 
         // make sure recipe time is valid and a positive number
-        if (!float.TryParse(inputData[3], out float recipeTime)) return;
+        if (!float.TryParse(inputData[4], out float recipeTime)) return;
         if (recipeTime < 0) return;
 
-        Recipe recipe = new Recipe(inputData[1], voltageTier, recipeTime);
+        Recipe recipe = new Recipe(inputData[1], machineVoltage, recipeVoltage, recipeTime);
         recipeGraph.AddRecipe(recipe);
         if (current != null) recipeGraph.BindInputRecipe(current, recipe);
     }
 }
 void EditRecipe(string[] inputData)
 {
-    if (inputData.Length != 4) return;
+    if (inputData.Length != 5) return;
 
     // make sure name exists
     Recipe? existingRecipe = recipeGraph.GetRecipe(inputData[1]);
     if (existingRecipe == null) return;
 
     // make sure voltage is valid
-    if (!VoltageTier.TryParse(inputData[2].ToUpper(), out VoltageTier voltageTier)) return;
+    if (!VoltageTier.TryParse(inputData[2].ToUpper(), out VoltageTier machineVoltage)) return;
+    if (!VoltageTier.TryParse(inputData[3].ToUpper(), out VoltageTier recipeVoltage)) return;
+
+    if (machineVoltage < recipeVoltage)
+    {
+        Console.WriteLine("Recipe has insufficient voltage");
+        return;
+    }
 
     // make sure recipe time is valid and a positive number
-    if (!float.TryParse(inputData[3], out float recipeTime)) return;
+    if (!float.TryParse(inputData[4], out float recipeTime)) return;
     if (recipeTime < 0) return;
 
-    existingRecipe.voltageTier = voltageTier;
+    existingRecipe.machineVoltage = machineVoltage;
+    existingRecipe.recipeVoltage = recipeVoltage;
     existingRecipe.time = recipeTime;
 }
 void RemoveRecipe(string[] inputData)
@@ -97,18 +112,19 @@ void ListRecipes()
     // traverse graph from the current point
     List<Recipe> recipes = recipeGraph.Traverse(current);
     foreach (var recipe in recipes)
-        Console.WriteLine($"{recipe.name}: {recipe.voltageTier} {recipe.time}s");
+        Console.WriteLine($"{recipe.name}: {recipe.machineVoltage} {recipe.recipeVoltage} {recipe.time}s");
 }
 void ListAllRecipes()
 {
     Console.WriteLine($" --- LISTING ALL RECIPES --- ");
     foreach (var recipe in recipeGraph.recipes)
-        Console.WriteLine($"{recipe.name}: {recipe.voltageTier} {recipe.time}s");
+        Console.WriteLine($"{recipe.name}: {recipe.machineVoltage} {recipe.recipeVoltage} {recipe.time}s");
 }
 void AddInput(string[] inputData)
 {
     if (inputData.Length != 3 || current == null) return;
-    current.inputs.Add(new Resource(inputData[1], int.Parse(inputData[2])));
+    if (!int.TryParse(inputData[1], out int amount)) return;
+    current.inputs.Add(new Resource(inputData[2], amount));
 }
 void RemoveInput(string[] inputData)
 {
@@ -118,7 +134,8 @@ void RemoveInput(string[] inputData)
 void AddOutput(string[] inputData)
 {
     if (inputData.Length != 3 || current == null) return;
-    current.outputs.Add(new Resource(inputData[1], int.Parse(inputData[2])));
+    if (!int.TryParse(inputData[1], out int amount)) return;
+    current.outputs.Add(new Resource(inputData[2], amount));
 }
 void RemoveOutput(string[] inputData)
 {

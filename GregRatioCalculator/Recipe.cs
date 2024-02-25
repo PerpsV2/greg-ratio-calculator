@@ -28,16 +28,22 @@ namespace GregRatioCalculator
     internal class Recipe
     {
         public string name { get; set; }
-        public VoltageTier voltageTier { get; set; }
+        public VoltageTier machineVoltage { get; set; }
+        public VoltageTier recipeVoltage { get; set; }
         public float time { get; set; }
         public List<Resource> inputs { get; set; }
         public List<Resource> outputs { get; set; }
         public List<Recipe> inputRecipes { get; }
 
-        public Recipe(string name, VoltageTier voltageTier, float time, List<Recipe>? inputRecipes = null)
+        public Recipe(string name, VoltageTier machineVoltage, VoltageTier recipeVoltage, float time, List<Recipe>? inputRecipes = null)
         {
+            if (machineVoltage < recipeVoltage)
+                throw new Exception("Machine voltage is less than recipe voltage");
             this.name = name;
-            this.voltageTier = voltageTier;
+            if (machineVoltage == VoltageTier.ULV) machineVoltage = VoltageTier.LV;
+            if (recipeVoltage == VoltageTier.ULV) recipeVoltage = VoltageTier.LV;
+            this.machineVoltage = machineVoltage;
+            this.recipeVoltage = recipeVoltage;
             this.time = time;
             inputs = new List<Resource>();
             outputs = new List<Resource>();
@@ -52,7 +58,7 @@ namespace GregRatioCalculator
 
         public float GetOverclockedTime()
         {
-            return Math.Max(time / (int)Math.Pow(2, Math.Max((int)voltageTier - 1, 0)), 0.05f);
+            return Math.Max(time / (int)Math.Pow(2, Math.Max(machineVoltage - recipeVoltage, 0)), 0.05f);
         }
     }
 }
