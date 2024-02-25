@@ -9,7 +9,9 @@ void PrintInstructions()
     Console.WriteLine("Add a new recipe to current   - add <name> <machine voltage> <recipe voltage> <time (seconds)>");
     Console.WriteLine("Add existing recipe to curr.  - add <name>");
     Console.WriteLine("Edit an existing recipe       - edit <name> <machine voltage> <recipe voltage> <time (seconds)>");
-    Console.WriteLine("Remove a recipe by name       - remove <name>");
+    Console.WriteLine("Rename a recipe               - rename <old name> <new name>");
+    Console.WriteLine("Remove a recipe from current  - remove <name>");
+    Console.WriteLine("Delete a recipe by name       - delete <name>");
     Console.WriteLine("Select a recipe by name       - select <name>");
     Console.WriteLine("Select global scope           - select");
     Console.WriteLine("List all recipes from current - list");
@@ -85,14 +87,22 @@ void EditRecipe(string[] inputData)
 }
 void RemoveRecipe(string[] inputData)
 {
+    if (inputData.Length != 2 || current == null) return;
+    Recipe? existingRecipe = recipeGraph.GetRecipe(inputData[1]);
+    if (existingRecipe == null) return;
+    
+    if (!current.inputRecipes.Remove(existingRecipe))
+        Console.WriteLine("Unable to remove recipe " + inputData[1]);
+}
+void DeleteRecipe(string[] inputData)
+{
     if (inputData.Length != 2) return;
     Recipe? existingRecipe = recipeGraph.GetRecipe(inputData[1]);
-    if (existingRecipe != null)
-    {
-        if (!recipeGraph.RemoveRecipe(existingRecipe))
-            Console.WriteLine("Unable to remove recipe " + inputData[1]);
-        else if (current == existingRecipe) current = null;
-    }
+    if (existingRecipe == null) return;
+
+    if (!recipeGraph.RemoveRecipe(existingRecipe))
+        Console.WriteLine("Unable to delete recipe " + inputData[1]);
+    else if (current == existingRecipe) current = null;
 }
 void SelectRecipe(string[] inputData)
 {
@@ -187,6 +197,7 @@ while (true)
         case "add"    : AddRecipe(inputData);    break;
         case "edit"   : EditRecipe(inputData);   break;
         case "remove" : RemoveRecipe(inputData); break;
+        case "delete" : DeleteRecipe(inputData); break;
         case "select" : SelectRecipe(inputData); break;
         case "list"   : ListRecipes();           break;
         case "listall": ListAllRecipes();        break;
