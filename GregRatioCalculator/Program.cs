@@ -61,7 +61,7 @@ void AddRecipe(string[] inputData)
 }
 void EditRecipe(string[] inputData)
 {
-    if (inputData.Length != 5 || inputData.Length != 2 || current == null) return;
+    if ((inputData.Length != 5 && inputData.Length != 2) || current == null) return;
 
     // rename the current recipe
     current.name = inputData[1];
