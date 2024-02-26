@@ -25,6 +25,8 @@ void PrintInstructions()
     Console.WriteLine("Print recipe i/o              - io");
     Console.WriteLine("Calculate ratios from current - calc <amount>");
     Console.WriteLine("Calculate overclocked time    - otime");
+    Console.WriteLine("Save recipe graph to file     - save <file name>");
+    Console.WriteLine("Load recipe graph from file   - load <file name>");
 }
 
 void AddRecipe(string[] inputData) 
@@ -189,22 +191,23 @@ void CalcRatios(string[] inputData)
 }
 void SaveGraph(string[] inputData)
 {
-    Console.WriteLine("Executing save command");
+    // make sure the command has the correct number of parameters
     if (inputData.Length != 2) return;
 
+    // validate file name and location
     string filename = inputData[1] + ".xml";
-    Console.WriteLine("Saving to " + filename);
     if (filename.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return;
 
     string? directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-    Console.WriteLine("Current directory is " + directory);
     if (directory == null) return;
 
     string filePath = Path.Combine(directory, filename);
-    Console.WriteLine("File path of save is " + filePath);
-    XmlSerializer ser = new XmlSerializer(typeof(RecipeGraph));
+    Console.WriteLine("Saving to " + filePath);
+    
+    // check if the file exists...
     if (File.Exists(filePath))
     {
+        // if it does prompt user to overwrite it
         Console.Write("File already exists. Overwrite it? [y/n]: ");
         if (Console.ReadLine() == "y")
             File.Create(filePath).Close();
@@ -212,16 +215,52 @@ void SaveGraph(string[] inputData)
     }
     else
     {
-        Console.WriteLine("File doesn't exist create one");
+        // otherwise create a new file at this location
+        Console.WriteLine("Creating file");
         File.Create(filePath).Close();
     }
+
+    // serialize the recipe graph to the newly created file
+    XmlSerializer ser = new XmlSerializer(typeof(RecipeGraph));
     TextWriter writer = new StreamWriter(filePath);
 
     Console.WriteLine("Serializing recipe graph");
     ser.Serialize(writer, recipeGraph);
 
-    Console.WriteLine("Closing file writer");
     writer.Close();
+    Console.WriteLine("Successfully saved recipe graph");
+}
+void LoadGraph(string[] inputData)
+{
+    // make sure the command has the correct number of parameters
+    if (inputData.Length != 2) return;
+
+    // validate file name and location
+    string filename = inputData[1] + ".xml";
+    if (filename.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return;
+
+    string? directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+    if (directory == null) return;
+
+    string filePath = Path.Combine(directory, filename);
+    // check if the current directory contains the file
+    if (Directory.GetFiles(directory).Contains(filePath))
+    {
+        Console.WriteLine("Loading from " + filePath);
+        XmlSerializer ser = new XmlSerializer(typeof(RecipeGraph));
+        using (Stream reader = new FileStream(filePath, FileMode.Open))
+        {
+            // load contents of file into recipeGraph
+            RecipeGraph? graph = (RecipeGraph?)ser.Deserialize(reader);
+            if (graph == null) Console.WriteLine("Unable to read from file");
+            else
+            {
+                recipeGraph = graph;
+                Console.WriteLine("Successfully loaded recipe graph");
+            }
+        }
+    }
+    else Console.WriteLine("File could not be found");
 }
 
 Console.WriteLine("Type help for instructions");
@@ -248,5 +287,6 @@ while (true)
         case "calc"   : CalcRatios(inputData);   break;
         case "otime"  : CalcOverclockTime();     break;
         case "save"   : SaveGraph(inputData);    break;
+        case "load"   : LoadGraph(inputData);    break;
     }
 }
