@@ -8,8 +8,8 @@ void PrintInstructions()
 {
     Console.WriteLine("Add a new recipe to current   - add <name> <machine voltage> <recipe voltage> <time (seconds)>");
     Console.WriteLine("Add existing recipe to curr.  - add <name>");
-    Console.WriteLine("Edit an existing recipe       - edit <name> <machine voltage> <recipe voltage> <time (seconds)>");
-    Console.WriteLine("Rename a recipe               - rename <old name> <new name>");
+    Console.WriteLine("Edit the current recipe       - edit <name> <machine voltage> <recipe voltage> <time (seconds)>");
+    Console.WriteLine("Rename the current recipe     - edit <name>");
     Console.WriteLine("Remove a recipe from current  - remove <name>");
     Console.WriteLine("Delete a recipe by name       - delete <name>");
     Console.WriteLine("Select a recipe by name       - select <name>");
@@ -61,11 +61,12 @@ void AddRecipe(string[] inputData)
 }
 void EditRecipe(string[] inputData)
 {
-    if (inputData.Length != 5) return;
+    if (inputData.Length != 5 || inputData.Length != 2 || current == null) return;
 
-    // make sure name exists
-    Recipe? existingRecipe = recipeGraph.GetRecipe(inputData[1]);
-    if (existingRecipe == null) return;
+    // rename the current recipe
+    current.name = inputData[1];
+    if (inputData.Length == 2) return;
+    // continue if the edit command does more than just rename
 
     // make sure voltage is valid
     if (!VoltageTier.TryParse(inputData[2].ToUpper(), out VoltageTier machineVoltage)) return;
@@ -81,9 +82,9 @@ void EditRecipe(string[] inputData)
     if (!float.TryParse(inputData[4], out float recipeTime)) return;
     if (recipeTime < 0) return;
 
-    existingRecipe.machineVoltage = machineVoltage;
-    existingRecipe.recipeVoltage = recipeVoltage;
-    existingRecipe.time = recipeTime;
+    current.machineVoltage = machineVoltage;
+    current.recipeVoltage = recipeVoltage;
+    current.time = recipeTime;
 }
 void RemoveRecipe(string[] inputData)
 {
