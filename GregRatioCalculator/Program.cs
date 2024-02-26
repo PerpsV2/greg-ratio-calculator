@@ -18,10 +18,10 @@ void PrintInstructions()
     Console.WriteLine("Select global scope           - select");
     Console.WriteLine("List all recipes from current - list");
     Console.WriteLine("List all recipes in graph     - listall");
-    Console.WriteLine("Add input to current recipe   - i <amount> <name> ");
-    Console.WriteLine("Add output to current recipe  - o <amount> <name> ");
-    Console.WriteLine("Remove input from current     - ri <name>");
-    Console.WriteLine("Remove output from current    - ro <name>");
+    Console.WriteLine("Add input to current recipe   - in <amount> <name> ");
+    Console.WriteLine("Add output to current recipe  - out <amount> <name> ");
+    Console.WriteLine("Remove input from current     - rin <name>");
+    Console.WriteLine("Remove output from current    - rout <name>");
     Console.WriteLine("Print recipe i/o              - io");
     Console.WriteLine("Calculate ratios from current - calc <amount>");
     Console.WriteLine("Calculate overclocked time    - otime");
@@ -186,8 +186,15 @@ void CalcOverclockTime()
 void CalcRatios(string[] inputData)
 {
     if (inputData.Length != 2 || current == null) return;
-    if (!int.TryParse(inputData[1], out int multiplier)) return;
-    recipeGraph.CalculateRatios(current, multiplier);
+    if (!float.TryParse(inputData[1], out float multiplier)) return;
+    List<RecipeRatio> ratios = recipeGraph.CalculateRatios(current, multiplier);
+    int maxRatioAmountStringLength = ratios
+        .Aggregate("", (max, cur) => max.Length > ((int)cur.amount).ToString().Length ? max : ((int)cur.amount).ToString()).Length;
+    foreach(var ratio in ratios)
+    {
+        string ratioAmountStr = ((decimal)ratio.amount).ToString("0.000").PadLeft(maxRatioAmountStringLength + 5, ' ');
+        Console.WriteLine($"{ratioAmountStr}x of {ratio.recipe.name}");
+    }
 }
 void SaveGraph(string[] inputData)
 {
@@ -279,11 +286,11 @@ while (true)
         case "select" : SelectRecipe(inputData); break;
         case "list"   : ListRecipes();           break;
         case "listall": ListAllRecipes();        break;
-        case "i"      : AddInput(inputData);     break;
-        case "o"      : AddOutput(inputData);    break;
-        case "ri"     : RemoveInput(inputData);  break;
-        case "ro"     : RemoveOutput(inputData); break;
-        case "info"   : PrintRecipeInfo();       break;
+        case "in"     : AddInput(inputData);     break;
+        case "out"    : AddOutput(inputData);    break;
+        case "rin"    : RemoveInput(inputData);  break;
+        case "rout"   : RemoveOutput(inputData); break;
+        case "io"     : PrintRecipeInfo();       break;
         case "calc"   : CalcRatios(inputData);   break;
         case "otime"  : CalcOverclockTime();     break;
         case "save"   : SaveGraph(inputData);    break;

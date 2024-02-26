@@ -7,6 +7,17 @@ using System.Threading.Tasks;
 
 namespace GregRatioCalculator
 {
+    public struct RecipeRatio
+    {
+        public Recipe recipe { get; set; }
+        public float amount { get; set; }
+        public RecipeRatio(Recipe recipe, float amount)
+        {
+            this.recipe = recipe;
+            this.amount = amount;
+        }
+    }
+
     public class RecipeGraph
     {
         public List<Recipe> recipes { get; }
@@ -45,9 +56,9 @@ namespace GregRatioCalculator
             return beenTo;
         }
 
-        public List<Recipe> CalculateRatios(Recipe rootRecipe, float amount)
+        public List<RecipeRatio> CalculateRatios(Recipe rootRecipe, float amount)
         {
-            Console.WriteLine($"{amount}x {rootRecipe.name}");
+            List<RecipeRatio> recipeRatios = new List<RecipeRatio>() { new RecipeRatio(rootRecipe, amount) };
 
             // for each input of the current recipe calculate the amount used per second
             Dictionary<string, float> usedPerSecond = new Dictionary<string, float>();
@@ -73,10 +84,10 @@ namespace GregRatioCalculator
                     }
 
                 // input recipe and current recipe share no resources
-                if (max <= 0) return new List<Recipe>();
-                CalculateRatios(child, max);
+                if (max <= 0) continue;
+                recipeRatios = recipeRatios.Concat(CalculateRatios(child, max)).ToList();
             }
-            return new List<Recipe>();
+            return recipeRatios;
         }
     }
 }
