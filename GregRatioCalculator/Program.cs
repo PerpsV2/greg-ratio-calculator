@@ -1,5 +1,7 @@
 ﻿using GregRatioCalculator;
 using System.Runtime.CompilerServices;
+using System.Xml.Serialization;
+using System.Reflection;
 
 RecipeGraph recipeGraph = new RecipeGraph();
 Recipe? current = null;
@@ -185,6 +187,42 @@ void CalcRatios(string[] inputData)
     if (!int.TryParse(inputData[1], out int multiplier)) return;
     recipeGraph.CalculateRatios(current, multiplier);
 }
+void SaveGraph(string[] inputData)
+{
+    Console.WriteLine("Executing save command");
+    if (inputData.Length != 2) return;
+
+    string filename = inputData[1] + ".xml";
+    Console.WriteLine("Saving to " + filename);
+    if (filename.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return;
+
+    string? directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+    Console.WriteLine("Current directory is " + directory);
+    if (directory == null) return;
+
+    string filePath = Path.Combine(directory, filename);
+    Console.WriteLine("File path of save is " + filePath);
+    XmlSerializer ser = new XmlSerializer(typeof(RecipeGraph));
+    if (File.Exists(filePath))
+    {
+        Console.Write("File already exists. Overwrite it? [y/n]: ");
+        if (Console.ReadLine() == "y")
+            File.Create(filePath).Close();
+        else return;
+    }
+    else
+    {
+        Console.WriteLine("File doesn't exist create one");
+        File.Create(filePath).Close();
+    }
+    TextWriter writer = new StreamWriter(filePath);
+
+    Console.WriteLine("Serializing recipe graph");
+    ser.Serialize(writer, recipeGraph);
+
+    Console.WriteLine("Closing file writer");
+    writer.Close();
+}
 
 Console.WriteLine("Type help for instructions");
 while (true)
@@ -209,5 +247,6 @@ while (true)
         case "info"   : PrintRecipeInfo();       break;
         case "calc"   : CalcRatios(inputData);   break;
         case "otime"  : CalcOverclockTime();     break;
+        case "save"   : SaveGraph(inputData);    break;
     }
 }

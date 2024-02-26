@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GregRatioCalculator
 {
-    struct Resource
+    public struct Resource
     {
         public string name { get; set; }
         public int amount { get; set; }
@@ -18,14 +18,14 @@ namespace GregRatioCalculator
         }
     }
 
-    enum VoltageTier
+    public enum VoltageTier
     {
         ULV, LV, MV, HV, EV, IV, LUV, ZPM, UV, UHV,
         
         max_voltage_tier
     }
 
-    internal class Recipe
+    public class Recipe
     {
         public string name { get; set; }
         public VoltageTier machineVoltage { get; set; }
@@ -34,6 +34,17 @@ namespace GregRatioCalculator
         public List<Resource> inputs { get; set; }
         public List<Resource> outputs { get; set; }
         public List<Recipe> inputRecipes { get; }
+
+        public Recipe()
+        {
+            name = string.Empty;
+            machineVoltage = VoltageTier.max_voltage_tier;
+            recipeVoltage = VoltageTier.max_voltage_tier;
+            time = -1;
+            inputs = new List<Resource>();
+            outputs = new List<Resource>();
+            inputRecipes = new List<Recipe>();
+        }
 
         public Recipe(string name, VoltageTier machineVoltage, VoltageTier recipeVoltage, float time, List<Recipe>? inputRecipes = null)
         {

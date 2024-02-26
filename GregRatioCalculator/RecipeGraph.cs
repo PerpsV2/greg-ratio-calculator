@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace GregRatioCalculator
 {
-    internal class RecipeGraph
+    public class RecipeGraph
     {
         public List<Recipe> recipes { get; }
 
