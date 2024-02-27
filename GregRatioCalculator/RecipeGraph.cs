@@ -56,6 +56,17 @@ namespace GregRatioCalculator
             return beenTo;
         }
 
+        public List<Resource> GetAllResourceTypes()
+        {
+            List<Resource> resources = new List<Resource>();
+            foreach (var recipe in recipes)
+            {
+                resources = resources.Concat(recipe.inputs).ToList();
+                resources = resources.Concat(recipe.outputs).ToList();
+            }
+            return resources.GroupBy(x => x).Select(x => x.First()).ToList();
+        }
+
         public List<RecipeRatio> CalculateRatios(Recipe rootRecipe, float amount)
         {
             List<RecipeRatio> recipeRatios = new List<RecipeRatio>() { new RecipeRatio(rootRecipe, amount) };

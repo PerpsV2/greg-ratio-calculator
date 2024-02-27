@@ -23,6 +23,8 @@ void PrintInstructions()
     Console.WriteLine("Remove input from current     - rin <name>");
     Console.WriteLine("Remove output from current    - rout <name>");
     Console.WriteLine("Print recipe i/o              - io");
+    Console.WriteLine("List all resource names       - listres");
+    Console.WriteLine("Rename a resource             - editres <old name> <new name>");
     Console.WriteLine("Calculate ratios from current - calc <amount>");
     Console.WriteLine("Calculate overclocked time    - otime");
     Console.WriteLine("Save recipe graph to file     - save <file name>");
@@ -178,6 +180,28 @@ void PrintRecipeInfo()
             (i < current.outputs.Count() ? current.outputs[i].name + " " + current.outputs[i].amount.ToString() : "").PadRight(maxOutputNameLength, ' '));
     }
 }
+void ListAllResources()
+{
+    Console.WriteLine(" --- LISTING ALL RESOURCES ---");
+    List<Resource> resources = recipeGraph.GetAllResourceTypes();
+    resources = resources.GroupBy(x => x.name).Select(x => x.First()).OrderBy(x => x.name).ToList();
+    foreach(var resource in resources)
+        Console.WriteLine(" " + resource.name);
+}
+void RenameResource(string[] inputData)
+{
+    if (inputData.Length != 3) return;
+    foreach(var recipe in recipeGraph.recipes)
+    {
+        for (int i = 0; i < recipe.inputs.Count(); ++i)
+            if (recipe.inputs[i].name == inputData[1])
+                recipe.inputs[i] = new Resource(inputData[2], recipe.inputs[i].amount);
+
+        for (int i = 0; i < recipe.outputs.Count(); ++i)
+            if (recipe.outputs[i].name == inputData[1])
+                recipe.outputs[i] = new Resource(inputData[2], recipe.outputs[i].amount);
+    }
+}
 void CalcOverclockTime()
 {
     if (current == null) return;
@@ -205,7 +229,8 @@ void SaveGraph(string[] inputData)
     string filename = inputData[1] + ".xml";
     if (filename.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return;
 
-    string? directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+    string? directory = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+    Console.WriteLine("Saving to directory " + directory);
     if (directory == null) return;
 
     string filePath = Path.Combine(directory, filename);
@@ -246,7 +271,8 @@ void LoadGraph(string[] inputData)
     string filename = inputData[1] + ".xml";
     if (filename.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return;
 
-    string? directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+    string? directory = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+    Console.WriteLine("Loading from directory " + directory);
     if (directory == null) return;
 
     string filePath = Path.Combine(directory, filename);
@@ -276,24 +302,27 @@ while (true)
     Console.Write($"{current?.name ?? "~"}> ");
     string input = Console.ReadLine() ?? "";
     string[] inputData = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+    if (inputData.Length <= 0) continue;
     switch(inputData[0])
     {
-        case "help"   : PrintInstructions();     break;
-        case "add"    : AddRecipe(inputData);    break;
-        case "edit"   : EditRecipe(inputData);   break;
-        case "remove" : RemoveRecipe(inputData); break;
-        case "delete" : DeleteRecipe(inputData); break;
-        case "select" : SelectRecipe(inputData); break;
-        case "list"   : ListRecipes();           break;
-        case "listall": ListAllRecipes();        break;
-        case "in"     : AddInput(inputData);     break;
-        case "out"    : AddOutput(inputData);    break;
-        case "rin"    : RemoveInput(inputData);  break;
-        case "rout"   : RemoveOutput(inputData); break;
-        case "io"     : PrintRecipeInfo();       break;
-        case "calc"   : CalcRatios(inputData);   break;
-        case "otime"  : CalcOverclockTime();     break;
-        case "save"   : SaveGraph(inputData);    break;
-        case "load"   : LoadGraph(inputData);    break;
+        case "help"   : PrintInstructions();       break;
+        case "add"    : AddRecipe(inputData);      break;
+        case "edit"   : EditRecipe(inputData);     break;
+        case "remove" : RemoveRecipe(inputData);   break;
+        case "delete" : DeleteRecipe(inputData);   break;
+        case "select" : SelectRecipe(inputData);   break;
+        case "list"   : ListRecipes();             break;
+        case "listall": ListAllRecipes();          break;
+        case "in"     : AddInput(inputData);       break;
+        case "out"    : AddOutput(inputData);      break;
+        case "rin"    : RemoveInput(inputData);    break;
+        case "rout"   : RemoveOutput(inputData);   break;
+        case "io"     : PrintRecipeInfo();         break;
+        case "listres": ListAllResources();        break;
+        case "editres": RenameResource(inputData); break;
+        case "calc"   : CalcRatios(inputData);     break;
+        case "otime"  : CalcOverclockTime();       break;
+        case "save"   : SaveGraph(inputData);      break;
+        case "load"   : LoadGraph(inputData);      break;
     }
 }
